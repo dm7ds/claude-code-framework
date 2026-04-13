@@ -16,6 +16,26 @@ continuation, or midnight rollover.
 - Never trust `currentDate` from system-reminder — it doesn't update.
 - Never trust your own sense of time — LLM instances don't have one.
 
+# ─── Compact Instructions ────────────────────────────────────────────
+
+# Compact Instructions
+
+ALWAYS preserve:
+- Modified file paths with specific changes
+- Current task state (done / pending / blocked)
+- Active sub-agents: who, status, what they're working on
+- User corrections and feedback (who said what)
+- User acceptance signals ("looks good"/"ok" = commit clearance for that scope)
+- Exact error messages from failing builds or tests
+
+MAY summarize (conclusions only, drop raw output):
+- Tool call results, grep output, file reads
+- Dead ends (what was tried, why it failed)
+
+MUST DROP:
+- Superseded status updates
+- Framework file contents (re-read from disk)
+
 # ─── Code Quality ────────────────────────────────────────────────────
 
 ## No Magic Literals (NML)
