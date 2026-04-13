@@ -27,6 +27,7 @@ ALWAYS preserve:
 - User corrections and feedback (who said what)
 - User acceptance signals ("looks good"/"ok" = commit clearance for that scope)
 - Exact error messages from failing builds or tests
+- Active CronCreate timers (ID, interval, purpose) — MUST be re-created after compaction, they do NOT survive it
 
 MAY summarize (conclusions only, drop raw output):
 - Tool call results, grep output, file reads
