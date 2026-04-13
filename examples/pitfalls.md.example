@@ -1,0 +1,25 @@
+# Pitfalls
+
+Project-specific knowledge base. Each entry is a distilled learning from
+resolved issues, grouped by code area. This grows over time as you fix bugs
+and discover gotchas.
+
+---
+
+## Authentication
+
+- **Always hash passwords AFTER decoding URL encoding.** The login endpoint
+  was URL-encoding passwords before hashing, causing mismatches when passwords
+  contained `&` or `=` (I-001). Hash the raw input, encode only for transport.
+
+## Dashboard / Charts
+
+- **Debounce resize observers on chart containers.** Without debounce, charts
+  re-render on every resize event causing visible flicker (I-002). Use 150ms
+  debounce as minimum.
+
+## General
+
+- **Check all locale-dependent formatting.** Date and number formatting that
+  works in en-US may break in other locales. Use InvariantCulture for data
+  processing, locale-specific only for display.

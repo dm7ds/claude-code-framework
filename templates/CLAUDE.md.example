@@ -1,0 +1,82 @@
+# Global CLAUDE.md — Example
+# Place this at: ~/.claude/CLAUDE.md
+# Claude Code reads this file at every session start.
+
+# ─── Time Blindness Warning ──────────────────────────────────────────
+
+## Session Time Blindness — IMPORTANT
+
+**Claude Code sessions have NO reliable time awareness.** The internal
+`currentDate` is set at session start and NEVER updates during compaction,
+continuation, or midnight rollover.
+
+**Hard rules:**
+- Before ANY time statement ("today", "yesterday", "on Saturday"):
+  run a system time command first. No exceptions.
+- Never trust `currentDate` from system-reminder — it doesn't update.
+- Never trust your own sense of time — LLM instances don't have one.
+
+# ─── Code Quality ────────────────────────────────────────────────────
+
+## No Magic Literals (NML)
+
+If a value is already defined in a data source (config, theme, constants),
+it must NEVER be duplicated as a literal elsewhere. One piece of information,
+one source. See `frameworks/code-quality.md` for details.
+
+## DRY for Templates
+
+If markup/code blocks differ only in binding paths, labels, or config values:
+use a reusable template, component, or loop. Copy-paste with minimal changes
+is ALWAYS a design defect.
+
+# ─── Framework Reference ─────────────────────────────────────────────
+
+## Framework (read on demand, not upfront)
+
+0. `~/.claude/frameworks/ownership-principle.md` — **Read first.** The core.
+1. `~/.claude/frameworks/playbook.md` — Rules R1–R22
+2. `~/.claude/frameworks/falltraps.md` — 26 traps reference
+3. `~/.claude/frameworks/delegation-roles.md` — Roles + model selection
+4. `~/.claude/frameworks/spawn-templates.md` — Agent spawn templates
+5. `~/.claude/frameworks/task-card-spec.md` — Task card format
+6. `~/.claude/frameworks/audit-protocol.md` — Audit structure
+7. `~/.claude/frameworks/issue-tracking.md` — Issue tracking protocol
+8. `~/.claude/frameworks/code-quality.md` — NML/DRY/SSOT
+9. `~/.claude/frameworks/session-start-protocol.md` — Session init ritual
+10. `~/.claude/frameworks/project-bootstrap.md` — New project setup
+
+## Bug Reports — Anti-Blame-Shift
+
+When the user reports a bug: FIRST spend 5-10 minutes grepping and reading
+code, THEN respond.
+
+Prohibited as reflexive response:
+- "There shouldn't be any X there"
+- "That's by design"
+- "Clear the cache"
+- "Restart"
+- "Are you sure you're seeing X?"
+- "It works on my end"
+
+User perception is fact. Your job is WHY, not WHETHER.
+
+# ─── Personalize Below ───────────────────────────────────────────────
+
+## About the User
+# Describe your role, experience level, and preferences here.
+# This helps Claude calibrate its responses.
+# Example:
+#   - Senior backend engineer, 10 years experience
+#   - Prefers terse communication, no hand-holding
+#   - Works on: ProjectA (React), ProjectB (Go API)
+
+## Active Projects
+# List your active projects with paths:
+# | Project | Path | Tech Stack |
+# |---------|------|------------|
+# | MyApp | ~/projects/myapp | React + Node |
+
+## Custom Rules
+# Add project-specific or personal rules here.
+# These override framework defaults where applicable.

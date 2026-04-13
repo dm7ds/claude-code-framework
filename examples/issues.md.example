@@ -1,0 +1,53 @@
+# Issues
+
+| ID | Status | Severity | Title |
+|----|--------|----------|-------|
+| I-001 | open | high | Login fails with special characters in password |
+| I-002 | open | medium | Dashboard chart flickers on resize |
+| I-003 | fixed | low | Typo in settings page header |
+
+---
+
+## I-001 — Login fails with special characters in password
+
+**Status:** open | **Severity:** high | **Found:** 2025-03-15
+**Found by:** user report
+
+**Description:**
+Login endpoint returns 500 when password contains `&` or `=` characters.
+The password is being URL-encoded before hashing, causing a mismatch
+with the stored hash.
+
+**Root Cause:** TBD
+
+**Fix:** TBD
+
+---
+
+## I-002 — Dashboard chart flickers on resize
+
+**Status:** open | **Severity:** medium | **Found:** 2025-03-16
+**Found by:** self-found during UI audit T005
+
+**Description:**
+The revenue chart on the dashboard re-renders completely on every
+window resize event instead of debouncing. Causes visible flicker
+on slower machines.
+
+**Root Cause:** Missing debounce on resize observer in ChartContainer.tsx
+
+**Fix:** TBD
+
+---
+
+## I-003 — Typo in settings page header
+
+**Status:** fixed | **Severity:** low | **Found:** 2025-03-14
+**Found by:** user report
+
+**Description:**
+Settings page header said "Settigns" instead of "Settings".
+
+**Root Cause:** Typo in settings.tsx
+
+**Fix:** Fixed in commit abc1234. Moved to archive.

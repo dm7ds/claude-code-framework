@@ -1,0 +1,47 @@
+# Project CLAUDE.md — Example
+# Place this at: <project-root>/CLAUDE.md
+# Claude Code reads this alongside the global CLAUDE.md.
+
+## Project: [Your Project Name]
+
+**Tech stack:** [e.g., React 18 + TypeScript + Vite]
+**Description:** [One sentence about what this project does]
+
+## Build
+
+```bash
+# Build command — code buddies run this after every change
+npm run build
+# or: dotnet build, cargo build, go build, etc.
+```
+
+## Test
+
+```bash
+# Test command
+npm test
+```
+
+## Conventions
+
+- [e.g., Use functional components, no class components]
+- [e.g., All API calls go through src/api/client.ts]
+- [e.g., CSS modules, not inline styles]
+
+## File Structure
+
+```
+src/
+├── components/    # UI components
+├── api/           # API client and types
+├── utils/         # Shared utilities
+└── pages/         # Route pages
+```
+
+## Known Pitfalls
+
+See `docs/pitfalls.md` for project-specific knowledge base.
+
+## Issues
+
+Tracked in `docs/issues.md`. See the framework's issue-tracking protocol.
