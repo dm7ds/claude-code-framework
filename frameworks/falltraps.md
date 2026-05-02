@@ -150,13 +150,18 @@ This file grew linearly — every incident produced a new entry, and eventually 
 
 ---
 
-### #14 — Scope Creep by Sub-Agent
+### #14 — Scope Creep by Sub-Agent + Global Commit Blast
 
 **Symptom:** Buddy was tasked with fixing bug A. Delivers fix for A plus "while I was there, I also refactored B and updated C". B and C were not in scope, not audited, and may introduce new issues.
 
-**Root cause:** The buddy saw "improvements" and made them without asking. Feels helpful, is actually a scope violation.
+**Variant (commit blast):** Buddy runs `git add -A` or `git add .` and commits everything in the working tree — including unstaged changes from other agents, half-finished work, or files completely outside their scope. This is worse than code scope creep because it silently ships unreviewed changes.
 
-**Countermeasure:** Task card must include "Prohibited" section. Buddy prompt must emphasize: out-of-scope changes are violations, not bonuses.
+**Root cause:** The buddy saw "improvements" and made them without asking. Or worse: didn't even look at what it was committing because `git add -A` is the lazy default.
+
+**Countermeasure:**
+- Task card must include "Prohibited" section.
+- Buddy prompt must emphasize: out-of-scope changes are violations, not bonuses.
+- **Commit discipline:** Never `git add -A`/`.`/`--all`. Always `git add <specific files>`. Always `git diff --staged` before commit to verify only own changes are staged. See spawn templates for the full commit discipline block.
 
 ---
 

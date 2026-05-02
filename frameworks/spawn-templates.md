@@ -17,10 +17,19 @@ ${TASK_CARD_CONTENT}
 ## Rules
 - Implement ONLY what's in scope. Out-of-scope changes are violations, not bonuses.
 - Run the build after implementation. If it fails, fix it before reporting done.
-- Commit with a clear message when done.
 - Do NOT refactor surrounding code.
 - Do NOT add features not in the task card.
 - Do NOT touch files not listed in scope.
+
+## Commit Discipline (CRITICAL)
+- NEVER use \`git add -A\`, \`git add .\`, or \`git add --all\`.
+  Always use \`git add <file1> <file2> ...\` with explicit paths.
+- BEFORE committing: run \`git diff --staged\` and verify ONLY your
+  changes are staged. If you see changes from other work: do NOT stage them.
+- Only commit files that are within your task scope.
+- If you see unstaged changes from other agents or prior work: DO NOT
+  touch them. Don't stage, don't commit, don't revert, don't modify.
+- Commit with a clear message referencing the task.
 
 ## Mandatory Reading (if referenced in task card)
 - Project CLAUDE.md for coding conventions
