@@ -2,13 +2,13 @@
 
 | ID | Status | Severity | Title |
 |----|--------|----------|-------|
-| I-001 | open | high | Login fails with special characters in password |
-| I-002 | open | medium | Dashboard chart flickers on resize |
-| I-003 | fixed | low | Typo in settings page header |
+| ISS-001 | open | high | Login fails with special characters in password |
+| ISS-002 | open | medium | Dashboard chart flickers on resize |
+| ISS-003 | fixed | low | Typo in settings page header |
 
 ---
 
-## I-001 — Login fails with special characters in password
+## ISS-001 — Login fails with special characters in password
 
 **Status:** open | **Severity:** high | **Found:** 2025-03-15
 **Found by:** user report
@@ -24,7 +24,7 @@ with the stored hash.
 
 ---
 
-## I-002 — Dashboard chart flickers on resize
+## ISS-002 — Dashboard chart flickers on resize
 
 **Status:** open | **Severity:** medium | **Found:** 2025-03-16
 **Found by:** self-found during UI audit T005
@@ -40,7 +40,7 @@ on slower machines.
 
 ---
 
-## I-003 — Typo in settings page header
+## ISS-003 — Typo in settings page header
 
 **Status:** fixed | **Severity:** low | **Found:** 2025-03-14
 **Found by:** user report

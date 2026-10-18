@@ -1,239 +1,103 @@
 # Claude Code Multi-Agent Framework
 
-A battle-tested framework for orchestrating multiple Claude Code agents. Born from months of real-world multi-agent development — every rule exists because a specific failure happened without it.
+A framework for orchestrating Claude Code sub-agents — born from months of real multi-agent development. It used to be ~7,000 lines of rules and failure catalogs. It is now under 600 lines of *meaning*, because rules don't scale and understanding does.
 
-## What This Solves
+> Working language of the framework files is German; the concepts are language-agnostic. This README is in English.
 
-When you use Claude Code's Agent tool to spawn sub-agents, things go wrong in predictable ways:
+## What it solves
 
-- Agents "forget" context and produce contextually wrong fixes
-- Nobody reviews the work — agents say "done" with bugs
-- Parallel agents overwrite each other's files
-- You lose track of what's running and what's stuck
-- The same mistakes repeat every session because agents have no cross-session memory
+- Agents say "done" with bugs — nobody reviewed the work.
+- The same question gets answered in two places in the code, and they drift apart.
+- Fixes compensate for bad input in every consumer instead of fixing the source.
+- Checks that can never fail (return code 0, `HTTP 200`, `running`) are taken as proof.
+- Parallel agents overwrite each other's files or wipe shared work (`stash`, `reset`, `add -A`).
+- Nobody tracks what was spawned; tasks silently die.
 
-This framework addresses all of these with a system of principles, rules, and templates injected via CLAUDE.md files, hooks, and structured workflows.
+## The core: six thoughts (`CLAUDE.md`)
 
-## Philosophy
+1. **One question has exactly one answering place, and it serves everyone who asks.** Two places are a defect even if both are right today.
+2. **Source before processing.** Garbage input is fixed at the source or rejected by *one* gate — "I don't know" is its own state, not a placeholder value.
+3. **A check must be able to turn red.** Break it by hand once; if the check doesn't catch it, it isn't one.
+4. **Claim only what is proven.** "Not found" is not "doesn't exist"; user perception is fact.
+5. **Build only what was ordered — but fix errors structurally, and a gate completely.**
+6. **What you spawn, you carry.** Every task is done and accepted, blocked and reported, or actively monitored.
 
-**Rules don't scale. Understanding does.**
+Everything else follows from these.
 
-This framework has 22 rules and 26 documented failure traps. But the entire thing rests on a single principle:
+## Layout
 
-> **What you spawn, you carry to completion. Actively, not passively.**
+```
+CLAUDE.md                     # the core: six thoughts, roles, self-optimization  → ~/.claude/CLAUDE.md
+frameworks/betrieb.md         # non-negotiable operating rules (git, processes, devices)
+frameworks/lane.md            # how a coordinating instance works: task card, spawn, monitoring, acceptance
+frameworks/graphify-grenzen.md · performance-trigger.md
+agents/*.md                   # one file per role, its complete rule set (sub-agents run with omitClaudeMd)
+skills/                       # framework-refresh, postmortem, new-project-bootstrap
+hooks/leitplanken.py          # PreToolUse hook: technically blocks the (H) rules in betrieb.md
+hooks/session_start.py        # SessionStart hook: local time, project, git summary, open issues
+tools/deckel.sh               # line cap per file + total ≤600; red = no commit
+tools/githooks/pre-commit     # runs deckel.sh
+examples/issues.md.example    # minimal issue file format (read by session_start.py)
+```
 
-An agent that internalizes this principle avoids most traps naturally. The rules are the safety net for when understanding lapses.
+## Roles (`agents/`)
 
-## Quick Start (15 minutes)
+| subagent_type | Role | Model |
+|---|---|---|
+| `code-buddy` | builds per task card in its own worktree | Sonnet |
+| `code-auditor` | read-only; *counts* how many places answer the card's question after the merge | Sonnet |
+| `research-buddy` | first choice for anything that produces raw data; burns its own tokens, returns a digest | Sonnet |
+| `ui-auditor` | accepts UI on the device/browser, by screenshot | Sonnet |
+| `architecture-reviewer` | structure and topology; double verdict with the code auditor | Opus |
+| `ui-designer` | design advisor, max 15 lines | Opus |
 
-### 1. Clone the repo
+Sub-agents don't see `CLAUDE.md` — each agent file carries its role's whole rule set, and the **task card** carries the project knowledge (`lane.md` §Karte).
+
+## Install
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/claude-code-framework.git
-cd claude-code-framework
 ```
 
-### 2. Install framework files
-
-Copy the framework files to your Claude Code config directory:
+Link (preferred, so edits land in git) or copy into `~/.claude/`:
 
 ```bash
-# Create the frameworks directory
-mkdir -p ~/.claude/frameworks
-
-# Copy framework files
-cp frameworks/*.md ~/.claude/frameworks/
-
-# Copy the session start hook
-mkdir -p ~/.claude/hooks
-cp hooks/session_start.py ~/.claude/hooks/
+ln -s "$PWD/claude-code-framework/CLAUDE.md"  ~/.claude/CLAUDE.md
+ln -s "$PWD/claude-code-framework/frameworks" ~/.claude/frameworks
+ln -s "$PWD/claude-code-framework/agents"     ~/.claude/agents
+ln -s "$PWD/claude-code-framework/skills"     ~/.claude/skills
 ```
 
-### 3. Configure the session start hook
+On Windows use directory junctions (`mklink /J`). Remove a junction only with `cmd /c rmdir "<path>"` (no `/s`) — recursive delete follows the link and empties the target.
 
-Add to your `~/.claude/settings.json`:
+Hooks in `~/.claude/settings.json` (point to the repo path):
 
 ```json
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "type": "command",
-        "command": "python3 ~/.claude/hooks/session_start.py"
-      }
-    ]
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "python3 /path/to/claude-code-framework/hooks/session_start.py" }] }],
+    "PreToolUse":   [{ "hooks": [{ "type": "command", "command": "python3 /path/to/claude-code-framework/hooks/leitplanken.py" }] }]
   }
 }
 ```
 
-### 4. Create your global CLAUDE.md
+`leitplanken.py` blocks writes under `.claude/`, so edit framework files in the repo, not via `~/.claude/`. Self-test: `python hooks/leitplanken.py --test`.
 
-```bash
-cp templates/CLAUDE.md.example ~/.claude/CLAUDE.md
-```
+Per project: run the `new-project-bootstrap` skill — it creates the project `CLAUDE.md` with what task cards need (build/test, tracker, card location, quality guards, building-block index).
 
-Then edit `~/.claude/CLAUDE.md` and personalize:
-- Add your role and experience level under "About the User"
-- List your active projects under "Active Projects"
-- Add any personal rules under "Custom Rules"
+## Maintenance
 
-### 5. Configure your projects
-
-For each project you want to use the framework with:
-
-```bash
-cd /path/to/your/project
-
-# Create project CLAUDE.md from template
-cp /path/to/claude-code-framework/templates/project-CLAUDE.md.example CLAUDE.md
-# Edit CLAUDE.md with your project's details
-
-# Create issue tracking
-mkdir -p docs
-echo '# Issues
-
-| ID | Status | Severity | Title |
-|----|--------|----------|-------|' > docs/issues.md
-
-# Create task directory (optional, for larger projects)
-mkdir -p .tasks/{pending,in-progress,done,audit,archive,blocked}
-echo '.tasks/' >> .gitignore
-```
-
-### 6. Configure the session hook for your projects
-
-Edit `~/.claude/hooks/session_start.py` and add your projects to the `PROJECT_MAP`:
-
-```python
-PROJECT_MAP = {
-    "/path/to/my-app": ("My App", "React SPA with Express backend"),
-    "/path/to/api-server": ("API Server", "Go REST API"),
-}
-```
-
-### 7. Verify
-
-Start a new Claude Code session in one of your projects. You should see the session start hook inject project context, local time, and the framework cheatsheet.
-
-## What's Included
-
-### Framework Files (`frameworks/`)
-
-| File | What It Does |
-|------|-------------|
-| `ownership-principle.md` | **The core.** Meta-principle above all rules. Read this first. |
-| `playbook.md` | 22 rules (R1–R22), each born from a real incident |
-| `falltraps.md` | 26 failure patterns with recognition and countermeasures |
-| `delegation-roles.md` | Role catalog with model selection (Sonnet vs Opus) |
-| `spawn-templates.md` | Copy-paste Agent tool templates for each role |
-| `task-card-spec.md` | Task card format — the contract between orchestrator and agent |
-| `audit-protocol.md` | How to audit work (PASS/WARN/FAIL) with evidence requirements |
-| `issue-tracking.md` | Issue tracking protocol with three-layer knowledge model |
-| `code-quality.md` | NML, DRY, SSOT rules |
-| `session-start-protocol.md` | What to do at session start |
-| `project-bootstrap.md` | How to set up a new project |
-
-### Hook (`hooks/`)
-
-| File | What It Does |
-|------|-------------|
-| `session_start.py` | Injects local time, project context, git summary, open issues, and framework cheatsheet at session start |
-
-### Templates (`templates/`)
-
-| File | What It Does |
-|------|-------------|
-| `CLAUDE.md.example` | Starter for your global `~/.claude/CLAUDE.md` |
-| `project-CLAUDE.md.example` | Starter for project-level `CLAUDE.md` |
-
-### Examples (`examples/`)
-
-| File | What It Does |
-|------|-------------|
-| `issues.md.example` | Example issue tracking file |
-| `pitfalls.md.example` | Example project knowledge base |
-
-## How It Works
-
-```
-You (Human Orchestrator)
-├── Session Start Hook fires → context injected
-├── CLAUDE.md loaded → rules active
-├── You describe the work
-│
-├── Spawn Code Buddy (Agent tool, Sonnet, worktree-isolated)
-│   ├── Gets task card with scope + acceptance criteria
-│   ├── Implements, builds, commits
-│   └── Reports back
-│
-├── Spawn Code Auditor (Agent tool, Sonnet)
-│   ├── Reviews work against task card
-│   ├── Checks: scope, DRY, cross-scope consumers, build
-│   └── Reports: PASS / WARN / FAIL
-│
-├── If PASS → merge/commit
-├── If FAIL → fix task → re-audit
-└── Track issues, update pitfalls, next task
-```
-
-## Key Concepts
-
-### Three Task States
-
-Every task is in exactly one state:
-- **(a) Done and accepted** — finished, verified
-- **(b) Blocked and reported** — can't continue, user informed
-- **(c) Active monitoring** — running, checked every 5-10 min with real tool calls
-
-Everything else is an ownership gap.
-
-### Three-Layer Knowledge Model
-
-1. **`issues.md`** — Open issues only. Lean, current.
-2. **`pitfalls.md`** — Distilled learnings from resolved issues. 3-5 lines per entry.
-3. **`issues-archive.md`** — Full text of resolved issues. Rarely read, always available.
-
-### Anti-Blame-Shift
-
-When a bug is reported: grep and read code first, respond after. Never deflect with "clear the cache" or "are you sure?". User perception is fact.
-
-## Adapting to Your Workflow
-
-### Start Small
-
-Don't adopt everything at once. Start with:
-1. The ownership principle
-2. A CLAUDE.md with your anti-blame-shift rule
-3. The session start hook
-4. Issue tracking in `docs/issues.md`
-
-This covers 80% of the failure modes.
-
-### Grow From Your Own Mistakes
-
-The falltraps catalog documents failures from a specific development context. Your failures will be different. Start your own `pitfalls.md` and add entries when things go wrong. A rule you write after experiencing the failure is worth ten rules you copied from someone else.
-
-### Customize Roles
-
-The role catalog (Code Buddy, Auditor, UI Designer, etc.) is a starting point. Add roles that match your domain. Remove roles you don't need.
-
-### Adjust Model Selection
-
-The framework defaults to Sonnet for most roles (speed + focus) and Opus only for design judgment. Adjust based on your needs and budget. The key insight: bigger models with long mandatory reading tend to lose focus. Faster models often produce better results for scoped tasks.
+- **Relapse → a guard (executable scan), never new prose.** A new rule only against a removed one.
+- `bash tools/deckel.sh` must stay green; enable the commit lock once per clone: `git config core.hooksPath tools/githooks`.
+- Git is the archive: the old rule catalog (R-rules, failure-trap catalog, playbook) is in the history before this version.
 
 ## FAQ
 
-**Do I need all 22 rules?**
-No. Start with R1 (scope first), R5 (zero-grep-gate), R6 (worktree isolation), R13 (no teams), R14 (track issues). Add others when you hit the problems they solve.
+**Why so short?** The old 7,000 lines were read, quoted and not applied. Six thoughts that are understood beat a catalog that is cited.
 
-**Why not use TeamCreate?**
-Empirically, persistent teams produce 0% success rate vs 100% for ad-hoc sub-tasks. Teams create idle members, diffused responsibility, and stale context. Spawn, execute, done, gone.
+**Why not TeamCreate?** Persistent team members fall asleep after their mandatory reading (measured 10:0 in favor of ad-hoc spawns). Spawn, execute, done, gone.
 
-**Why Sonnet over Opus for most roles?**
-Speed, focus, and cost. Opus with long mandatory reading loses focus. Sonnet does the same code audit in 1/3 the time. Use Opus only where genuine creative judgment is needed (design decisions).
-
-**Can I use this with other AI coding tools?**
-The principles (ownership, three task states, anti-blame-shift) are universal. The implementation (CLAUDE.md, Agent tool, hooks) is Claude Code specific.
+**Why Sonnet by default?** Speed, focus, cost. Opus only for genuine judgment (structure, design).
 
 ## License
 

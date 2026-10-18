@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# Deckel-Waechter als Commit-Sperre: rot = kein Commit (CLAUDE.md §Selbstoptimierung).
+exec bash "$(git rev-parse --show-toplevel)/tools/deckel.sh"

@@ -12,6 +12,7 @@ Installation:
 """
 
 import subprocess
+import json
 import os
 import re
 import sys
@@ -21,8 +22,8 @@ import sys
 # Customize this to match YOUR project structure.
 
 PROJECT_MAP = {
-    # "D:\\Development\\my-app": ("My App", "React SPA with Express backend"),
-    # "D:\\Development\\api-server": ("API Server", "Go REST API"),
+    # "C:\\code\\my-app": ("My App", "React SPA with Express backend"),
+    # "C:\\code\\api-server": ("API Server", "Go REST API"),
     # "/home/user/projects/webapp": ("WebApp", "Next.js full-stack"),
 }
 
@@ -31,6 +32,12 @@ DEFAULT_PROJECT = ("Unknown Project", "No project mapping configured — add you
 
 # Path to framework files (adjust if you installed elsewhere)
 FRAMEWORK_DIR = os.path.expanduser("~/.claude/frameworks")
+
+# Windows console default is often cp1252 - the hook output must be UTF-8.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
 
 # ─── Helpers ──────────────────────────────────────────────────────────
 
@@ -119,35 +126,16 @@ def load_issues(project_root):
 
 # ─── Framework Cheatsheet ────────────────────────────────────────────
 
-FRAMEWORK_CHEATSHEET = """
-### Framework Core: Ownership Principle
-
-**What you spawn, you carry to completion. Actively, not passively.**
-
-Three task states: **(a)** done and accepted, **(b)** blocked and reported, **(c)** active monitoring with concrete next-check. Everything else = ownership gap.
-
-**Before ending any turn:** check the three states. If (c), verify you made a real tool call in the last ~10 min. If not → turn isn't done.
-
-**Key rules:**
-- **R2** Active monitoring every 5-10 min — real tool calls, not promises
-- **R5** Zero-Grep-Gate — never delete a symbol without global grep
-- **R6** Worktree isolation for parallel agents
-- **R13** No TeamCreate — ad-hoc Agent sub-tasks only
-- **R14** Track issues immediately in docs/issues.md
-- **R22** Mandatory auditor after code changes (self-audit doesn't count)
-- **#21** Anti-Blame-Shift — user reports bug → grep first, respond after
-
-**TIME BLINDNESS:** This injection shows time at SESSION START. During long sessions (compaction, continuation, midnight), it becomes STALE. Before any time statement: verify with system clock command.
-
-_(Full framework: see frameworks/ directory. Refresh with /framework-refresh skill.)_
-""".strip()
+# Only what CLAUDE.md cannot do (timing). The rules live in ~/.claude/CLAUDE.md;
+# injecting them twice cost ~3 KB per session.
+FRAMEWORK_CHEATSHEET = "_Time above = session START; fetch it again from the system clock before any time statement. Rules: ~/.claude/CLAUDE.md; refresh with the framework-refresh skill._"
 
 
 # ─── Main ─────────────────────────────────────────────────────────────
 
-def build_context():
+def build_context(cwd=None):
     """Assemble the session start context injection."""
-    cwd = os.getcwd()
+    cwd = cwd or os.getcwd()
     time = local_time()
     project_name, project_desc = detect_project(cwd)
     git = git_summary()
@@ -175,5 +163,12 @@ if __name__ == "__main__":
     # Read stdin (required by Claude Code hook protocol)
     input_data = sys.stdin.read() if not sys.stdin.isatty() else ""
 
-    context = build_context()
-    print(context)
+    cwd = None
+    if input_data:
+        try:
+            payload = json.loads(input_data)
+            cwd = payload.get("cwd") or payload.get("workspace", {}).get("cwd")
+        except Exception:
+            pass
+
+    print(build_context(cwd))
