@@ -1,0 +1,16 @@
+# SPEC: Invoice service (what-index)
+
+File name in a project: `docs/SPEC.md`. It holds no content of its own: scope sentences that each
+link a decision (the why), and a table that points each question to its source.
+Checked by `tools/spec-check.sh`. (This example is invented; the guard's section heading is German.)
+In a project the decision link resolves as `decisions/<file>`.
+
+## Scope und Nicht-Scope
+- Invoice totals, tax and rounding are computed on the server only; clients display them. ([why](decisions/2026-03-12_invoice-totals-server.md))
+
+## Frage → Quelle
+| Question | Source |
+|---|---|
+| Why are totals computed on the server? | [decision](decisions/2026-03-12_invoice-totals-server.md) |
+| Which tax rates apply? | [tax table](specs/tax-rates.md) |
+| How is an invoice laid out? | [layout spec](specs/) |

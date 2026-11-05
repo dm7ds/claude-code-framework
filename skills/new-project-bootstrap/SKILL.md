@@ -41,7 +41,12 @@ Framework: `~/.claude/CLAUDE.md` (Orchestrator-Modus). Hier steht nur, was Karte
 - Ort: `docs/decisions/<yyyy-mm-dd>_<thema>.md`, genau die Abschnitte aus `FELDER` in `tools/decisions-check.sh` (einzige Stelle der Feldnamen), je mit Inhalt
 - Jede Datei steht im Bausteine-Index (Abschnitt `## Entscheidungen`, Link auf `docs/decisions/<datei>`)
 - Der Ordner `docs/decisions/` wird mit der ersten Entscheidung angelegt; ohne Ordner meldet der Wächter ROT „Ordner fehlt" (die Allowlist deckt das nicht), also erst einhängen, wenn eine Entscheidung existiert
-- Wächter: `bash <framework>/tools/decisions-check.sh <root> <index>` (läuft im Test-Befehl mit)
+- Wächter: `bash <framework>/tools/decisions-check.sh <root> <index>` (im Test-Befehl, wenn das Projekt einen zentralen Testlauf hat; sonst steht der Aufruf in der Projekt-`CLAUDE.md` und wird von Hand gefahren)
+
+## Was-Index
+- `docs/SPEC.md` ist der Einstieg für das Was: Scope-Sätze (je mit Link auf eine Entscheidung) und eine Tabelle „Frage → Quelle". SPEC = Was-Index, `docs/decisions/` = Warum, Fachquellen = Inhalt; SPEC.md hält selbst keinen Inhalt
+- Feature-Specs liegen unter `docs/specs/`, nirgends sonst; Altbestand nur über eine Allowlist mit Grund
+- Wächter: `bash <framework>/tools/spec-check.sh <root> [allowlist]` (Einhängen wie beim Entscheidungs-Wächter); die Überschrift des Scope-Abschnitts steht in `SCOPE_HEADING` in `tools/spec-check.sh` und nur dort
 
 ## Locks und Heartbeat
 - Lock-Block (z. B. Gradle, Gerät), wörtlich übernehmbar in Karten: <block | keiner>
@@ -67,6 +72,6 @@ Ein Tracker-Vorgang mit trivialer Karte (z.B. ein Satz in die README) durch `cod
 ## Bericht
 
 ```
-Bootstrap <projekt>: CLAUDE.md <neu | ergänzt>, Workspace-Eintrag <ja>, Entscheidungen <n>, Probelauf <PASS | FAIL + Grund>
+Bootstrap <projekt>: CLAUDE.md <neu | ergänzt>, Workspace-Eintrag <ja>, Entscheidungen <n>, SPEC.md <ja | nein>, Probelauf <PASS | FAIL + Grund>
 Offen: <z.B. Güte-Wächter fehlt noch, Bausteine-Index leer>
 ```

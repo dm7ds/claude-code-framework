@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2026-11-05
+
+SPEC as what-index: `docs/SPEC.md` = what, `docs/decisions/` = why, domain sources = content. Minor release: new guard, example and docs; no existing interface removed or changed incompatibly.
+
+### Added
+- `tools/spec-check.sh`: guard that `docs/SPEC.md` is an index without content of its own: every relative link resolves, every line in the scope section links a file under `docs/decisions/`, and no `*spec*.md` lies outside `docs/specs/` and `docs/SPEC.md` (legacy files only via an allowlist entry with a reason); messages name owner and remedy; `--selftest` runs positive and negative cases.
+- `examples/SPEC.md.example`: an invented what-index that passes the guard together with `examples/decision.md.example`.
+- `skills/new-project-bootstrap/SKILL.md`: section `## Was-Index` (SPEC rule, `docs/specs/`, guard call) and `SPEC.md` in the bootstrap report.
+
+### Changed
+- `frameworks/lane.md`: the task card's project context also lists `docs/SPEC.md` as buddy reading.
+- `skills/new-project-bootstrap/SKILL.md`: the decisions guard runs in the test command if the project has a central test run, otherwise by hand per the project `CLAUDE.md`.
+- `README.md`: "Knowledge layer" replaces "no global `SPEC.md`" with the three-part split and a question-to-place row; layout, quickstart and Desktop note list `spec-check.sh`.
+
 ## [2.2.0] - 2026-11-05
 
 Knowledge layer: where decisions live and how an outsider gets from install to the first guard. Minor release: new capabilities and docs, no existing interface removed or changed incompatibly.
@@ -67,6 +81,7 @@ Guard operation: how quality guards are run, proven and owned.
 ### Added
 - Initial release: ownership principle, 22 rules, 26 failure traps, delegation roles, spawn templates, audit protocol, issue tracking and a session-start hook.
 
+[2.3.0]: https://github.com/dm7ds/claude-code-framework/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/dm7ds/claude-code-framework/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/dm7ds/claude-code-framework/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/dm7ds/claude-code-framework/compare/v1.2.0...v2.0.0
