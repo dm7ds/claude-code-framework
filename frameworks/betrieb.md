@@ -5,7 +5,7 @@ Diese Liste fällt nur mit ausdrücklichem Ja des Users. `hooks/leitplanken.py` 
 
 ## Dateisystem und Git
 
-- (H) `*/.claude/` ist tabu für Workload — jeder Schreibzugriff dort kostet den User eine Bestätigung. Worktrees selbst anlegen: `git worktree add ../<repo>-worktrees/<thema> -b <branch> master` (neben dem Repo, nie darin); nie `isolation: "worktree"`. Einzige Ausnahme: Memory.
+- (H) `*/.claude/` ist tabu für Workload — jeder Schreibzugriff dort kostet den User eine Bestätigung. Worktrees selbst anlegen: `git worktree add <worktree-root>/<thema> -b <branch> master` (Ordner neben dem Repo oder im Repo ignoriert; Pfad steht in der Projekt-CLAUDE.md); nie `isolation: "worktree"`. Einzige Ausnahme: Memory.
 - (H) Im geteilten Baum kein `stash`/`reset`/`restore`/`clean`/`checkout --` — stash ist repo-weit, der Rest wirft fremde Arbeit weg. Rot-Beweis geht per Kopie nach `build/`, mutieren, zurückspielen.
 - (H) Nie `add -A`/`add .`/`commit -a`: `git status` lesen, Einzelpfade stagen. Committet wird nur der abgenommene Scope; nie bauen und committen im selben Befehl.
 - (H) `worktree remove` nur aus dem Haupt-Repo, nie `--force`; Junctions (`node_modules`) vorher mit `cmd /c rmdir` ohne `/s` lösen und prüfen, dass sie weg sind — `remove` folgt sonst der Junction und leert das Ziel.

@@ -38,6 +38,7 @@ hooks/session_start.py        # SessionStart hook: local time, project, git summ
 tools/deckel.sh               # line cap per file + total ≤600; red = no commit
 tools/githooks/pre-commit     # runs deckel.sh
 examples/issues.md.example    # minimal issue file format (read by session_start.py)
+CHANGELOG.md                  # release notes (Keep a Changelog, SemVer)
 ```
 
 ## Roles (`agents/`)
@@ -45,7 +46,7 @@ examples/issues.md.example    # minimal issue file format (read by session_start
 | subagent_type | Role | Model |
 |---|---|---|
 | `code-buddy` | builds per task card in its own worktree | Sonnet |
-| `code-auditor` | read-only; *counts* how many places answer the card's question after the merge | Sonnet |
+| `code-auditor` | read-only on source (writes only its report under `docs/audits/`); *counts* how many places answer the card's question after the merge | Sonnet |
 | `research-buddy` | first choice for anything that produces raw data; burns its own tokens, returns a digest | Sonnet |
 | `ui-auditor` | accepts UI on the device/browser, by screenshot | Sonnet |
 | `architecture-reviewer` | structure and topology; double verdict with the code auditor | Opus |

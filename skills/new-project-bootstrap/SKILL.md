@@ -26,7 +26,7 @@ Framework: `~/.claude/CLAUDE.md` (Orchestrator-Modus). Hier steht nur, was Karte
 ## Bauen und Prüfen
 - Build: `<befehl>` — Exit 0, 0 Warnings
 - Test: `<befehl>`
-- Güte-Wächter: `<aufruf>`, Allowlist `<pfad>`, Ist-Zahl <n> (Datum)
+- Güte-Wächter: `<aufruf>` (läuft im Test-Befehl mit), Wächter-Register `<pfad>` — genau eines je Projekt, Muster und Allowlist mit Grund stehen dort und nur dort; Ist-Zahl <n> (Datum)
 
 ## Ablage
 - Issue-Kanal: <Tracker-Aufruf | docs/issues.md>

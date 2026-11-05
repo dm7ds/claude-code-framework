@@ -5,6 +5,7 @@ sagt dem Agenten den Sinn, damit er einen erlaubten Weg sucht statt umzuformulie
 Selbsttest: python leitplanken.py --test
 """
 import json
+import posixpath
 import re
 import sys
 
@@ -19,6 +20,7 @@ BASH_VERBOTE = [
     (GIT_OPTS + r"add\s+(-A|--all|\.)(\s|$)", "nur Einzelpfade stagen (git status lesen, dann git add <datei>)"),
     (GIT_OPTS + r"commit\s+(-a\b|-am\b|--all\b)", "nur Einzelpfade committen"),
     (GIT_OPTS + r"worktree\s+remove\s+.*--force", "worktree remove --force zerstoert ungesicherte Arbeit"),
+    (r"(--no-verify\b|core\.hookspath)", "Hooks nicht umgehen (--no-verify / core.hooksPath): Waechter-Hook ist das Rueckfall-Gate"),
     (r"\bfind\s+/(\s|$)", "kein find / -- durchsucht alle Worktrees; git ls-files nehmen"),
     (r"\bpython3?(\.exe)?\s*(-(\s|$)|<<|$|[;&|])", "kein python mit stdin-Skript (-, Heredoc, ohne Argument): Datei per Write anlegen und ausfuehren"),
     (r"\btaskkill\b.*\s/IM\s", "Prozesse nur per eigener PID beenden, nie per Name"),
@@ -37,7 +39,19 @@ SUB_VERBOTE = [
 ]
 
 
-def pruefe(tool, eingabe, sub=False):
+def _norm(pfad):
+    # ../ aufloesen, sonst rutscht memory/../../settings.json als Memory durch
+    return posixpath.normpath(pfad.replace("\\", "/")) if pfad else ""
+
+
+def memory_freigabe(tool, eingabe):
+    """Memory-Schreiben explizit erlauben: nur durchlassen loest den App-Dialog fuer .claude/ aus."""
+    if tool not in ("Write", "Edit", "MultiEdit"):
+        return False
+    return bool(CLAUDE_ERLAUBT.search(_norm(eingabe.get("file_path") or "")))
+
+
+def pruefe(tool, eingabe, sub=False, agent_type=""):
     if tool == "Bash":
         cmd = eingabe.get("command", "")
         if sub:
@@ -52,12 +66,14 @@ def pruefe(tool, eingabe, sub=False):
             if re.search(muster, cmd, re.I):
                 return grund
     elif tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
-        pfad = eingabe.get("file_path") or eingabe.get("notebook_path") or ""
+        pfad = _norm(eingabe.get("file_path") or eingabe.get("notebook_path") or "")
         if CLAUDE_PFAD.search(pfad) and not CLAUDE_ERLAUBT.search(pfad):
             return ".claude ist tabu fuer Workload -- Framework-Dateien im Framework-Repo bearbeiten (Junction/Symlink), Scratch ins Scratchpad"
+        if agent_type == "code-auditor" and (tool != "Write" or "/docs/audits/" not in posixpath.normpath(pfad.replace("\\", "/"))):
+            return "code-auditor schreibt nur seinen Report unter docs/audits/"
     elif tool == "Agent":
         if eingabe.get("isolation") == "worktree":
-            return "kein isolation:worktree (legt unter .claude/worktrees an) -- git worktree add ../<projekt>-worktrees/<thema>"
+            return "kein isolation:worktree (legt unter .claude/worktrees an) -- git worktree add <worktree-root>/<thema>"
     return None
 
 
@@ -79,6 +95,7 @@ def _test():
         ("Bash", {"command": "rm C:/Users/me/.claude/projects/p/memory/a.md"}),
         ("Write", {"file_path": "C:/code/app/.claude/tasks/k.md"}),
         ("Edit", {"file_path": "C:\\Users\\d\\.claude\\settings.json"}),
+        ("Write", {"file_path": "C:/Users/me/.claude/projects/p/memory/../../../settings.json"}),
         ("Agent", {"isolation": "worktree"}),
     ]
     gruen = [
@@ -109,6 +126,21 @@ def _test():
         assert not pruefe("Bash", {"command": c}) or c.startswith("cat <<"), f"Haupt darf: {c}"
     for c in sub_gruen:
         assert not pruefe("Bash", {"command": c}, sub=True), f"Sub muesste durchlassen: {c} -> {pruefe('Bash', {'command': c}, True)}"
+    audit = "C:/code/app/docs/audits/_by-date/2026-10/x_FAIL.md"
+    quelle = "C:/code/app/web/src/a.ts"
+    aud_rot = [("Write", "D:/a/docs/audits/../../src/x.ts"), ("Write", "D:/a/docs/audits-alt/x.md"), ("Write", quelle), ("Edit", audit), ("MultiEdit", audit), ("Write", "C:\\code\\app\\web\\a.ts")]
+    aud_gruen = [("Write", audit), ("Write", audit.replace("/", "\\"))]
+    for t, p in aud_rot:
+        assert pruefe(t, {"file_path": p}, agent_type="code-auditor"), f"Auditor muesste blocken: {t} {p}"
+    for t, p in aud_gruen:
+        assert not pruefe(t, {"file_path": p}, agent_type="code-auditor"), f"Auditor muesste durchlassen: {t} {p}"
+    assert not pruefe("Write", {"file_path": quelle}, agent_type="code-buddy"), "code-buddy darf Quelle schreiben"
+    assert not pruefe("Edit", {"file_path": audit}, agent_type="code-buddy"), "code-buddy darf Edit"
+    mem = "C:\\Users\\me\\.claude\\projects\\p\\memory\\a.md"
+    assert memory_freigabe("Write", {"file_path": mem}) and memory_freigabe("Edit", {"file_path": mem}), "Memory muss allow bekommen"
+    for p in ("C:/Users/me/.claude/settings.json", "C:/Users/me/.claude/projects/p/memory/../../../settings.json", "D:/x/memory/a.md"):
+        assert not memory_freigabe("Write", {"file_path": p}), f"kein allow fuer {p}"
+    assert not memory_freigabe("Bash", {"command": f"echo x > {mem}"}), "Bash bekommt kein allow"
     print(f"ok: {len(rot)} rot, {len(gruen)} gruen, Sub {len(sub_rot)} rot, {len(sub_gruen)} gruen")
 
 
@@ -120,7 +152,11 @@ if __name__ == "__main__":
         daten = json.load(sys.stdin)
     except Exception:
         sys.exit(0)  # Fallback: kaputte Eingabe blockiert nie die Arbeit
-    grund = pruefe(daten.get("tool_name", ""), daten.get("tool_input") or {}, sub=bool(daten.get("agent_id")))
+    grund = pruefe(daten.get("tool_name", ""), daten.get("tool_input") or {}, sub=bool(daten.get("agent_id")),
+                   agent_type=daten.get("agent_type", ""))
     if grund:
         print(f"LEITPLANKE: {grund}", file=sys.stderr)
         sys.exit(2)
+    if memory_freigabe(daten.get("tool_name", ""), daten.get("tool_input") or {}):
+        print(json.dumps({"hookSpecificOutput": {"hookEventName": "PreToolUse", "permissionDecision": "allow",
+                                                 "permissionDecisionReason": "Memory-Ablage"}}))
