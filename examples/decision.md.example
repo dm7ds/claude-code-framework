@@ -1,0 +1,22 @@
+# Decision: invoice totals are computed on the server only
+
+File name in a project: `docs/decisions/2026-03-12_invoice-totals-server.md`.
+The five sections below are exactly the fields `tools/decisions-check.sh` requires.
+No other `##` headings are allowed; each needs at least one line of content.
+(This example is invented; the checker's field names are German.)
+
+## Kontext
+The web client and the mobile app both summed invoice lines themselves and rounded differently (per line vs. per total). Customers saw cent differences between screen and PDF.
+
+## Entscheid
+Totals, tax and rounding are computed once, on the server (`InvoiceService.totals`). Clients display the returned numbers and never calculate them.
+
+## Verworfen
+- Shared rounding library in both clients: still two call sites, drifts at the next update.
+- Rounding on the client with a server check: the check would only report, not fix.
+
+## Woran man den Fehler merkt
+A support ticket "PDF and screen differ by 1 cent", or any `sum(`/`toFixed(` over invoice lines outside the server (the project's guard greps for it).
+
+## Wie zurückdrehen
+Revert the commit that removed client-side summing; the server field `totals` stays and is simply ignored by the clients. No data migration needed.

@@ -5,6 +5,20 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.2.0] - 2026-11-05
+
+Knowledge layer: where decisions live and how an outsider gets from install to the first guard. Minor release: new capabilities and docs, no existing interface removed or changed incompatibly.
+
+### Added
+- `tools/decisions-check.sh`: guard that every `docs/decisions/*.md` has the five required sections with content, is linked in the building-block index (link target must resolve), and that allowlist entries carry a reason; messages name owner and remedy; `--selftest` runs positive and negative cases.
+- `examples/decision.md.example`, `examples/project-CLAUDE.md.example`: an invented decision that passes the guard and a filled-in project `CLAUDE.md`.
+- `README.md`: "Knowledge layer" (immune system vs. memory, question-to-place table, memory vs. `docs/decisions/` rule), "Quickstart: the first hour" with the task-card schema in English, and a note on what needs Claude Code Desktop.
+- `skills/new-project-bootstrap/SKILL.md`: section `## Entscheidungen` in the project `CLAUDE.md` template, the memory-vs-decisions rule, and the number of decisions in the bootstrap report.
+
+### Changed
+- `frameworks/lane.md`: the task card's project context also lists the relevant `docs/decisions/` paths, so the reasoning reaches the buddy.
+- `README.md`: the install URL placeholder points to the real repository; layout lists the new files.
+
 ## [2.1.0] - 2026-11-05
 
 Guard operation: how quality guards are run, proven and owned.
@@ -53,6 +67,7 @@ Guard operation: how quality guards are run, proven and owned.
 ### Added
 - Initial release: ownership principle, 22 rules, 26 failure traps, delegation roles, spawn templates, audit protocol, issue tracking and a session-start hook.
 
+[2.2.0]: https://github.com/dm7ds/claude-code-framework/compare/v2.1.0...v2.2.0
 [2.1.0]: https://github.com/dm7ds/claude-code-framework/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/dm7ds/claude-code-framework/compare/v1.2.0...v2.0.0
 [1.2.0]: https://github.com/dm7ds/claude-code-framework/compare/v1.1.1...v1.2.0

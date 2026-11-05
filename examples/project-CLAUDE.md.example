@@ -1,0 +1,35 @@
+# Shop — Projektwissen
+
+Framework: `~/.claude/CLAUDE.md` (Orchestrator-Modus). Hier steht nur, was Karten aus diesem Projekt brauchen.
+
+## Bauen und Prüfen
+- Build: `npm run build` — Exit 0, 0 Warnings
+- Test: `npm test`
+- Güte-Wächter: `bash tools/guards.sh` (läuft im Test-Befehl mit), Wächter-Register `tools/guards.txt` — genau eines je Projekt, Muster und Allowlist mit Grund stehen dort und nur dort; Ist-Zahl 4 (2026-03-12)
+
+## Ablage
+- Issue-Kanal: `docs/issues.md`
+- Karten: `docs/tasks/` (nie unter `.claude/`)
+- Berichte, Audits, Worktrees: Pfade nach `lane.md` bzw. `betrieb.md`, nur Abweichungen hier
+
+## Bausteine-Index
+| Frage | antwortende Stelle |
+|---|---|
+| Welcher Preis gilt? | `src/pricing/price.ts` (`priceFor`) |
+| Wie wird gerundet? | `src/pricing/rounding.ts` (`roundCents`) |
+| Wer darf bestellen? | `src/auth/policy.ts` (`canOrder`) |
+
+## Entscheidungen
+- Ort: `docs/decisions/<yyyy-mm-dd>_<thema>.md`, genau die Abschnitte aus `FELDER` in `tools/decisions-check.sh`, je mit Inhalt
+- Jede Datei steht im Bausteine-Index (Abschnitt `## Entscheidungen`, Link auf `docs/decisions/<datei>`)
+- Wächter: `bash <framework>/tools/decisions-check.sh . CLAUDE.md` (läuft im Test-Befehl mit)
+- [Rechnungssummen nur auf dem Server](docs/decisions/2026-03-12_invoice-totals-server.md)
+
+## Locks und Heartbeat
+- Lock-Block: keiner
+- Heartbeat-Skript: keins
+
+## Projektregeln
+- Ruhezeiten: keine Builds Mo–Fr 14–20 Uhr ohne Freigabe (Quelle: Team-Absprache, Kanal #dev)
+
+Regel: Memory beschreibt das Verhalten der Instanz; eine Projektentscheidung mit Architekturfolge steht in `docs/decisions/`, das Memory ist nur Verweis.

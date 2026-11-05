@@ -37,6 +37,12 @@ Framework: `~/.claude/CLAUDE.md` (Orchestrator-Modus). Hier steht nur, was Karte
 | Frage | antwortende Stelle |
 |---|---|
 
+## Entscheidungen
+- Ort: `docs/decisions/<yyyy-mm-dd>_<thema>.md`, genau die Abschnitte aus `FELDER` in `tools/decisions-check.sh` (einzige Stelle der Feldnamen), je mit Inhalt
+- Jede Datei steht im Bausteine-Index (Abschnitt `## Entscheidungen`, Link auf `docs/decisions/<datei>`)
+- Der Ordner `docs/decisions/` wird mit der ersten Entscheidung angelegt; ohne Ordner meldet der Wächter ROT „Ordner fehlt" (die Allowlist deckt das nicht), also erst einhängen, wenn eine Entscheidung existiert
+- Wächter: `bash <framework>/tools/decisions-check.sh <root> <index>` (läuft im Test-Befehl mit)
+
 ## Locks und Heartbeat
 - Lock-Block (z. B. Gradle, Gerät), wörtlich übernehmbar in Karten: <block | keiner>
 - Heartbeat-Skript: <pfad | keins>
@@ -47,6 +53,8 @@ Framework: `~/.claude/CLAUDE.md` (Orchestrator-Modus). Hier steht nur, was Karte
 ## Projektmanifest (nur UI)
 <Form-Faktoren, Listenverbot, Bedienkanten, Design-Memory, Skill-Pfad>
 ```
+
+Regel: Memory beschreibt das Verhalten der Instanz; eine Projektentscheidung mit Architekturfolge steht in `docs/decisions/`, das Memory ist nur Verweis.
 
 ## 3. Workspace-Eintrag
 
@@ -59,6 +67,6 @@ Ein Tracker-Vorgang mit trivialer Karte (z.B. ein Satz in die README) durch `cod
 ## Bericht
 
 ```
-Bootstrap <projekt>: CLAUDE.md <neu | ergänzt>, Workspace-Eintrag <ja>, Probelauf <PASS | FAIL + Grund>
+Bootstrap <projekt>: CLAUDE.md <neu | ergänzt>, Workspace-Eintrag <ja>, Entscheidungen <n>, Probelauf <PASS | FAIL + Grund>
 Offen: <z.B. Güte-Wächter fehlt noch, Bausteine-Index leer>
 ```

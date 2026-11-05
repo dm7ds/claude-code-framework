@@ -24,6 +24,23 @@ A framework for orchestrating Claude Code sub-agents — born from months of rea
 
 Everything else follows from these.
 
+## Knowledge layer
+
+Two systems, kept apart:
+
+- **Immune system** — what keeps work correct: the six thoughts, guards (executable scans), hooks.
+- **Memory** — what keeps knowledge: agent memory, `docs/decisions/`, domain sources (API docs, routing tables), the issue tracker.
+
+| Question | The one place |
+|---|---|
+| How should the instance behave? | agent memory (`~/.claude/projects/<p>/memory/`) |
+| Why was a project decision made, how do I undo it? | `docs/decisions/<date>_<topic>.md` (five fixed sections), linked from the building-block index |
+| Which code answers question X? | building-block index in the project `CLAUDE.md` |
+| What is open, who owns it? | issue tracker / `docs/issues.md` |
+| What happened in this task? | the buddy's report file under `docs/reports/` |
+
+Rule: memory describes the instance's *behavior*. A project decision with architectural consequences goes to `docs/decisions/`; memory only points to it. There is deliberately no `DECISIONS.md` and no global `SPEC.md` — they would be a second answering place (thought 1). Buddies see neither `CLAUDE.md` nor memory, so the task card's `## Projektkontext` lists the relevant `docs/decisions/` paths. `tools/decisions-check.sh` guards the shape: every decision file has all five sections with content and is linked in the index. See `examples/decision.md.example`.
+
 ## Layout
 
 ```
@@ -36,8 +53,11 @@ skills/                       # framework-refresh, postmortem, new-project-boots
 hooks/leitplanken.py          # PreToolUse hook: technically blocks the (H) rules in betrieb.md
 hooks/session_start.py        # SessionStart hook: local time, project, git summary, open issues
 tools/deckel.sh               # line cap per file + total ≤600; red = no commit
+tools/decisions-check.sh      # guard: docs/decisions/*.md have all five sections and are indexed (--selftest)
 tools/githooks/pre-commit     # runs deckel.sh
 examples/issues.md.example    # minimal issue file format (read by session_start.py)
+examples/decision.md.example  # an invented decision that passes decisions-check.sh
+examples/project-CLAUDE.md.example  # a filled-in project CLAUDE.md (neutral example project)
 CHANGELOG.md                  # release notes (Keep a Changelog, SemVer)
 ```
 
@@ -57,7 +77,7 @@ Sub-agents don't see `CLAUDE.md` — each agent file carries its role's whole ru
 ## Install
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/claude-code-framework.git
+git clone https://github.com/dm7ds/claude-code-framework.git
 ```
 
 Link (preferred, so edits land in git) or copy into `~/.claude/`:
@@ -85,6 +105,24 @@ Hooks in `~/.claude/settings.json` (point to the repo path):
 `leitplanken.py` blocks writes under `.claude/`, so edit framework files in the repo, not via `~/.claude/`. Self-test: `python hooks/leitplanken.py --test`.
 
 Per project: run the `new-project-bootstrap` skill — it creates the project `CLAUDE.md` with what task cards need (build/test, tracker, card location, quality guards, building-block index).
+
+## Quickstart: the first hour
+
+1. **Install** (above): link the framework into `~/.claude/`, add the two hooks. Check: `python hooks/leitplanken.py --test` and `bash tools/decisions-check.sh --selftest` end green.
+2. **Bootstrap** your project: run the `new-project-bootstrap` skill. Result: a project `CLAUDE.md` (see `examples/project-CLAUDE.md.example`).
+3. **First task card.** One file per task, written before any spawn (`frameworks/lane.md` §Karte). The schema, in English:
+   - *The question in one sentence* — what question does the code answer afterwards?
+   - *`## Tatsachen`* (facts) — table `path:line | form | return | fit? YES/NO + why`: every place that answers that question today.
+   - *`## Projektkontext`* (project context) — build/test command, guards, paths, relevant rules and `docs/decisions/` paths, building-block index. The buddy sees nothing else.
+   - *Acceptance criteria*, each with the mutation that turns it red.
+   - *Worktree path*, branch, approval wording.
+4. **First spawn:** a `code-buddy` builds the card in its own worktree and writes a report file; then a separate `code-auditor` checks it (read-only, counts the answering places after the merge). Self-audit is not an audit.
+5. **First guard:** `bash <framework>/tools/deckel.sh` (size caps of the framework files; from inside the framework clone: `bash tools/deckel.sh`), then your first project guard from the bootstrap; for decisions copy `examples/decision.md.example` into `docs/decisions/` of your project, link it in the index and run `bash <framework>/tools/decisions-check.sh <project-root> <index>` (e.g. `<project-root>` = `.`, `<index>` = `CLAUDE.md`). Break it once by hand (delete a section) and watch it turn red — a guard that cannot fail is not one.
+
+### What needs Claude Code Desktop
+
+Works with any Claude Code: the six thoughts, task cards, buddy/auditor spawns, `leitplanken.py`, `deckel.sh`, `decisions-check.sh`, `session_start.py`.
+Desktop-app specific: the per-session `CronCreate` monitoring job and the messaging between sessions described in `lane.md` §Monitoring and §Kommunikation (thought 6). Without the app, keep the same duty by hand: check your open tasks at least every 20 minutes.
 
 ## Maintenance
 
